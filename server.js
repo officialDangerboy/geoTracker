@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+const connectMongo = require('connect-mongo');
+const MongoStore = connectMongo.create ? connectMongo : connectMongo(session);
 
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
@@ -279,6 +280,9 @@ app.post('/api/hit/:id', hitLimiter, async (req, res) => {
     res.json({ dest:link.dest });
   } catch(e) { console.error('Hit error:',e); res.status(500).json({ error:'error' }); }
 });
+
+// ── Health check ──────────────────────────────────────────────────────
+app.get('/healthz', (req, res) => res.status(200).json({ ok: true }));
 
 // ── Pages ─────────────────────────────────────────────────────────────
 app.get('/',          (req,res) => res.sendFile(path.join(__dirname,'public','index.html')));
