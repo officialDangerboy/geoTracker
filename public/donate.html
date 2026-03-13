@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeoTrack — Support Us</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080b10;--s:#0d1117;--border:#1a2030;--accent:#00ff88;--text:#e2e8f0;--muted:#4a5568;--card:#0d1117}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-y:auto;padding-bottom:3rem}
+
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 15% 20%,rgba(0,255,136,0.07) 0%,transparent 45%),radial-gradient(ellipse at 85% 75%,rgba(0,149,255,0.04) 0%,transparent 45%);pointer-events:none;z-index:0}
+
+/* NAV */
+.topnav{position:sticky;top:0;z-index:100;background:rgba(8,11,16,0.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 1.5rem;height:54px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-size:1.05rem;font-weight:800;letter-spacing:-0.03em;text-decoration:none;color:var(--text)}
+.nav-logo span{color:var(--accent)}
+.nav-back{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);text-decoration:none;border:1px solid var(--border);padding:5px 12px;border-radius:3px;transition:border-color .2s,color .2s}
+.nav-back:hover{border-color:var(--accent);color:var(--accent)}
+
+/* HERO */
+.hero{position:relative;z-index:1;text-align:center;padding:4.5rem 1.5rem 3rem}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.15em;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.18);padding:5px 14px;border-radius:2px;margin-bottom:1.75rem}
+.hero-eyebrow::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+.hero h1{font-size:clamp(2rem,6vw,3.4rem);font-weight:800;letter-spacing:-0.04em;line-height:1.05;margin-bottom:1rem}
+.hero h1 .accent{color:var(--accent)}
+.hero-sub{font-family:'Space Mono',monospace;font-size:0.78rem;color:var(--muted);line-height:1.75;max-width:480px;margin:0 auto 2.5rem}
+
+/* BIG DONATE BUTTON */
+.donate-wrap{display:flex;justify-content:center;margin-bottom:.75rem}
+.btn-donate{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:#000;font-family:'Space Mono',monospace;font-size:0.95rem;font-weight:700;padding:1.1rem 3rem;border-radius:6px;border:none;cursor:pointer;text-decoration:none;letter-spacing:0.05em;text-transform:uppercase;transition:background .15s,transform .15s,box-shadow .15s;position:relative;overflow:hidden}
+.btn-donate::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.12) 0%,transparent 60%);pointer-events:none}
+.btn-donate:hover{background:#00e87a;transform:translateY(-2px);box-shadow:0 10px 32px rgba(0,255,136,0.3)}
+.btn-donate:active{transform:translateY(0)}
+.btn-donate svg{width:18px;height:18px;flex-shrink:0}
+.donate-note{font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--muted);text-align:center}
+
+/* DIVIDER */
+.divider{position:relative;z-index:1;display:flex;align-items:center;gap:1rem;max-width:700px;margin:3rem auto 2.5rem;padding:0 1.5rem}
+.divider-line{flex:1;height:1px;background:var(--border)}
+.divider-text{font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;white-space:nowrap}
+
+/* FUND CARDS GRID */
+.funds{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:0 1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+
+.fund-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.4rem 1.4rem;transition:border-color .25s,transform .25s;animation:fadeUp .5s ease both}
+.fund-card:nth-child(1){animation-delay:.05s}
+.fund-card:nth-child(2){animation-delay:.12s}
+.fund-card:nth-child(3){animation-delay:.19s}
+.fund-card:nth-child(4){animation-delay:.26s}
+.fund-card:nth-child(5){animation-delay:.33s}
+.fund-card:nth-child(6){animation-delay:.40s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.fund-card:hover{border-color:rgba(0,255,136,0.22);transform:translateY(-3px)}
+
+.fund-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.12);border-radius:6px;font-size:1.2rem;margin-bottom:.85rem}
+.fund-title{font-size:.9rem;font-weight:700;margin-bottom:.35rem;letter-spacing:-.01em}
+.fund-desc{font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);line-height:1.65}
+
+/* FOOTER */
+footer{position:relative;z-index:1;border-top:1px solid var(--border);margin-top:4rem;padding:1.5rem;text-align:center;font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted)}
+footer a{color:var(--muted);text-decoration:none;transition:color .2s}
+footer a:hover{color:var(--accent)}
+
+@media(max-width:600px){
+  .hero{padding:3rem 1rem 2rem}
+  .funds{padding:0 1rem}
+  .btn-donate{padding:.95rem 2rem;font-size:.82rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="nav-logo" href="/">Geo<span>Track</span></a>
+  <a class="nav-back" href="/dashboard">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Dashboard
+  </a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Support GeoTrack</div>
+  <h1>Keep the radar<br><span class="accent">running 🛰️</span></h1>
+  <p class="hero-sub">GeoTrack is built by a small indie team. Your support keeps the servers alive, ships new features, and keeps the platform free for everyone.</p>
+
+  <div class="donate-wrap">
+    <a href="https://razorpay.me/@technextai" target="_blank" rel="noopener" class="btn-donate">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Donate via Razorpay
+    </a>
+  </div>
+  <p class="donate-note">One-time · Any amount · Secure payment</p>
+</section>
+
+<!-- DIVIDER -->
+<div class="divider">
+  <div class="divider-line"></div>
+  <div class="divider-text">What your support funds</div>
+  <div class="divider-line"></div>
+</div>
+
+<!-- FUND CARDS -->
+<div class="funds">
+  <div class="fund-card">
+    <div class="fund-icon">🖥️</div>
+    <div class="fund-title">Server Costs</div>
+    <div class="fund-desc">Keeping GeoTrack live, fast, and reliable 24/7 for every user around the clock.</div>
+  </div>
+  <div class="fund-card">
+    <div class="fund-icon">🗺️</div>
+    <div class="fund-title">Map Services</div>
+    <div class="fund-desc">Live location maps with real-time pin drops on every hit, powered by Leaflet & OSM.</div>
+  </div>
+  <div class="fund-card">
+    <div class="fund-icon">⚡</div>
+    <div class="fund-title">New Features</div>
+    <div class="fund-desc">More expiry options, webhooks, link analytics, and notification support on the roadmap.</div>
+  </div>
+  <div class="fund-card">
+    <div class="fund-icon">🔒</div>
+    <div class="fund-title">Security Updates</div>
+    <div class="fund-desc">Continuous hardening, dependency audits, and ongoing penetration testing.</div>
+  </div>
+  <div class="fund-card">
+    <div class="fund-icon">📱</div>
+    <div class="fund-title">Mobile App</div>
+    <div class="fund-desc">Native Android & iOS apps with push notifications whenever a new hit comes in.</div>
+  </div>
+  <div class="fund-card">
+    <div class="fund-icon">🌐</div>
+    <div class="fund-title">Custom Domains</div>
+    <div class="fund-desc">Use your own domain for tracking links with automatic SSL provisioning.</div>
+  </div>
+</div>
+
+<footer>
+  <span>© 2025 GeoTrack · TechNextAI</span>
+  &nbsp;·&nbsp;
+  <a href="/">Home</a>
+  &nbsp;·&nbsp;
+  <a href="/dashboard">Dashboard</a>
+</footer>
+
+</body>
+</html>

