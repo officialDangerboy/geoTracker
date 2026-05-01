@@ -1,8 +1,5 @@
 [phases.setup]
-nixPkgs = ["fontconfig", "freetype", "liberation_ttf"]
-
-[phases.build]
-cmds = ["npm install"]
+aptPkgs = ["fonts-liberation", "fontconfig", "libfontconfig1"]
 
 [start]
 cmd = "node server.js"
