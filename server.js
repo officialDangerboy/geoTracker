@@ -243,6 +243,7 @@ app.get('/api/hits/:id', async (req, res) => {
   } catch(e) { res.status(500).json({ error:'error' }); }
 });
 
+// In your server.js, improve the hit endpoint logging
 app.post('/api/hit/:id', hitLimiter, async (req, res) => {
   try {
     if (!isValidId(req.params.id)) return res.status(400).json({ error:'invalid' });
@@ -251,11 +252,18 @@ app.post('/api/hit/:id', hitLimiter, async (req, res) => {
     if (new Date(link.expiresAt)<new Date()) return res.status(410).json({ error:'expired' });
 
     let { lat, lon, acc } = req.body;
-    lat = (lat!==null&&lat!==undefined&&!isNaN(parseFloat(lat))) ? parseFloat(lat) : null;
-    lon = (lon!==null&&lon!==undefined&&!isNaN(parseFloat(lon))) ? parseFloat(lon) : null;
-    acc = (acc!==null&&acc!==undefined&&!isNaN(parseInt(acc)))   ? parseInt(acc)   : null;
-    if (lat!==null&&(lat<-90||lat>90))   lat=null;
-    if (lon!==null&&(lon<-180||lon>180)) lon=null;
+    
+    // Better null/undefined handling
+    const hasValidLat = lat !== null && lat !== undefined && !isNaN(parseFloat(lat));
+    const hasValidLon = lon !== null && lon !== undefined && !isNaN(parseFloat(lon));
+    
+    lat = hasValidLat ? parseFloat(lat) : null;
+    lon = hasValidLon ? parseFloat(lon) : null;
+    acc = (acc !== null && acc !== undefined && !isNaN(parseInt(acc))) ? parseInt(acc) : null;
+    
+    // Validate ranges
+    if (lat !== null && (lat < -90 || lat > 90)) lat = null;
+    if (lon !== null && (lon < -180 || lon > 180)) lon = null;
 
     const ua = req.headers['user-agent']||'';
     let device='Unknown';
@@ -274,10 +282,17 @@ app.post('/api/hit/:id', hitLimiter, async (req, res) => {
     else if (/Safari\//.test(ua))  browser='Safari';
 
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress||'';
+    
+    // Enhanced logging
+    const locationStatus = (lat && lon) ? `SUCCESS (${lat},${lon})` : 'FAILED (null,null)';
+    console.log(`[HIT] ${req.params.id} → ${locationStatus} | ${device}/${browser} | ${ip} | Acc:${acc || 'N/A'}m`);
+    
     await Link.findByIdAndUpdate(req.params.id, { $push:{ hits:{ lat,lon,acc,device,browser,ip,time:new Date() } } });
-    console.log(`[HIT] ${req.params.id} → ${lat},${lon} | ${device}/${browser} | ${ip}`);
     res.json({ dest:link.dest });
-  } catch(e) { console.error('Hit error:',e); res.status(500).json({ error:'error' }); }
+  } catch(e) { 
+    console.error('Hit error:', e); 
+    res.status(500).json({ error:'error' }); 
+  }
 });
 
 // ── Health check ──────────────────────────────────────────────────────
