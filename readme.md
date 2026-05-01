@@ -60,8 +60,8 @@ A self-hosted location-tracking link platform. Create short-lived tracking links
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/geotrack.git
-cd geotrack
+git clone https://github.com/officialDangerboy/neoTracker.git
+cd neotrack
 
 # 2. Install dependencies
 npm install
@@ -82,9 +82,6 @@ Create a `.env` file in the project root:
 
 ```env
 MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/<dbname>
-SESSION_SECRET=a_long_random_secret_string_here
-PORT=3000
-NODE_ENV=production
 ```
 
 | Variable         | Required | Description                                    |
@@ -174,7 +171,7 @@ The project includes a `Procfile` and is ready to deploy on [Railway](https://ra
 
 1. Push the repo to GitHub.
 2. Create a new Railway project → **Deploy from GitHub repo**.
-3. Add environment variables (`MONGO_URI`, `SESSION_SECRET`, `NODE_ENV=production`) under **Variables** in the Railway dashboard.
+3. Add environment variables (`MONGO_URI`) under **Variables** in the Railway dashboard.
 4. Railway auto-detects the `Procfile` and runs `node server.js`.
 
 ---
