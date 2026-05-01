@@ -7,7 +7,7 @@ const MongoStore = connectMongo.create ? connectMongo : connectMongo(session);
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
-const { createCanvas } = require('@napi-rs/canvas');
+const svgCaptcha = require('svg-captcha');
 const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
@@ -97,35 +97,27 @@ function isValidId(id) { return mongoose.Types.ObjectId.isValid(id); }
 
 // ── CAPTCHA ──────────────────────────────────────────────────────────
 app.get('/api/captcha', (req, res) => {
-  const n1 = Math.floor(Math.random()*9)+1;
-  const n2 = Math.floor(Math.random()*9)+1;
+  const captcha = svgCaptcha.createMathExpr({
+    noise: 3,
+    color: true,
+    background: '#0f1117',
+    width: 160,
+    height: 52,
+    fontSize: 40
+  });
+
   const token = uuidv4();
-  captchas[token] = { answer: String(n1+n2), expires: Date.now()+5*60*1000 };
+  captchas[token] = { answer: String(captcha.text), expires: Date.now() + 5 * 60 * 1000 };
+
   const now = Date.now();
   Object.keys(captchas).forEach(k => { if (captchas[k].expires < now) delete captchas[k]; });
 
-  const W=160, H=52;
-  const canvas = createCanvas(W, H);
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle='#0f1117'; ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle='rgba(0,255,136,0.07)'; ctx.lineWidth=1;
-  for(let x=0;x<W;x+=16){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
-  for(let y=0;y<H;y+=16){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
-  for(let i=0;i<50;i++){ctx.fillStyle=`rgba(0,255,136,${Math.random()*0.25})`;ctx.fillRect(Math.random()*W,Math.random()*H,2,2)}
-  for(let l=0;l<3;l++){
-    ctx.strokeStyle=`rgba(0,255,136,${0.08+Math.random()*0.12})`;ctx.lineWidth=1;ctx.beginPath();
-    for(let x=0;x<=W;x+=8){const y=H/2+Math.sin(x*0.12+l*2)*12+(Math.random()-.5)*8;x===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
-    ctx.stroke();
-  }
-  const text=`${n1} + ${n2} = ?`; ctx.font='bold 21px monospace'; let xPos=10;
-  for(const ch of text){
-    ctx.save();ctx.translate(xPos,H/2+7);ctx.rotate((Math.random()-.5)*0.3);
-    ctx.fillStyle=`hsl(${145+Math.random()*20},100%,${60+Math.random()*15}%)`;
-    ctx.fillText(ch,0,0);ctx.restore();xPos+=ctx.measureText(ch).width+2;
-  }
-  const buf = canvas.toBuffer('image/png');
-  res.set({'Content-Type':'image/png','X-Captcha-Token':token,'Cache-Control':'no-store'});
-  res.send(buf);
+  res.set({
+    'Content-Type': 'image/svg+xml',
+    'X-Captcha-Token': token,
+    'Cache-Control': 'no-store'
+  });
+  res.send(captcha.data);
 });
 
 // ── AUTH ─────────────────────────────────────────────────────────────
