@@ -7,6 +7,10 @@ A self-hosted location-tracking link platform. Create short-lived tracking links
 ![Version](https://img.shields.io/badge/version-2.0.1-blue)
 
 ---
+## how to setup 
+watch this video : https://youtu.be/MC8hoyaoUNg?si=bBb5MDJSFuYcnk2L
+
+---
 
 ## How It Works
 
